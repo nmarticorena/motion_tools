@@ -1,6 +1,6 @@
 [project]
 name = "motion_tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "Scripts for humanoid motion retargetting"
 
 [build-system] # this is to fix issue with pixi pip install on editable mode

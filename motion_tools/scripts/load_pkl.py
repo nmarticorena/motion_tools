@@ -65,13 +65,12 @@ def main(
         files = [folder_path]
 
     print(files)
-    rec = rr.RecordingStream("motion")
-    rec.set_time("time",duration = 0)
-    rec.spawn()
-
-    robot = ReRunRobot(rec, robot_path)
 
     for f in files:
+        rec = rr.RecordingStream(str(f))
+        robot = ReRunRobot(rec, robot_path)
+        rec.set_time("time",duration = 0)
+        rec.spawn()
         play_one_file(robot, rec, f)
 
 def cli():
