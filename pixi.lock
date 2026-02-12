@@ -1653,8 +1653,8 @@ packages:
   timestamp: 1733255681319
 - pypi: ./
   name: motion-tools
-  version: 0.1.0
-  sha256: 48b7777595fd9cc58baa80524c326c9a4251ac8e98c6f6e87c71cddb4df58981
+  version: 0.1.1
+  sha256: 4867c4e57a65db2a45d489d36a6623ea6e0781b3e81c6032f683f67900b15b00
 - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
   sha256: 3fde293232fa3fca98635e1167de6b7c7fda83caf24b9d6c91ec9eefb4f4d586
   md5: 47e340acb35de30501a76c7c799c41d7
