@@ -1,11 +1,9 @@
 import pathlib
-import pickle as pkl
-
+from motion_tools.robot_gui import ReRunRobot
+from motion_tools.motion import Motion
 import rerun as rr
-import tyro
 
 import motion_tools
-from motion_tools.robot_gui import ReRunRobot
 
 PATH = pathlib.Path(motion_tools.__file__).parent.parent
 
@@ -15,19 +13,17 @@ def iter_files(folder: pathlib.Path, pattern: str):
 
 
 def play_one_file(
-    robot: ReRunRobot, rec: rr.RecordingStream, pkl_path: pathlib.Path, i_time=0
-):
-    with open(pkl_path, "rb") as f:
-        data = pkl.load(f)
-
-    fps = float(data["fps"])
+    robot: ReRunRobot, rec: rr.RecordingStream, motion: Motion, time: float = 0
+) -> float:
+    fps = float(motion.fps)
     dt = 1.0 / fps
 
-    t = i_time
+    # Reset timeline if desired
+    t = time
 
-    dof_pos = data["dof_pos"]
-    root_pos = data["root_pos"]
-    root_rot = data["root_rot"]
+    dof_pos = motion.dof_pos
+    root_pos = motion.root_pos
+    root_rot = motion.root_rot
 
     # Basic sanity checks
     n = min(len(dof_pos), len(root_pos), len(root_rot))
@@ -53,40 +49,34 @@ def play_one_file(
     return t
 
 
-def main(
-    folder_path: str,
-    /,
+def play_folder(
+    path: str,
     robot_path: str = str(PATH / "assets/g1_29dof_no_hands.urdf"),
+    pattern: str = "*.pkl",
     flatten: bool = False,
+    **kwargs,
 ):
-    if pathlib.Path(folder_path).is_dir():
-        folder = pathlib.Path(folder_path).expanduser().resolve()
-        files = list(iter_files(folder, "*.pkl"))
+    if pathlib.Path(path).is_dir():
+        folder = pathlib.Path(path).expanduser().resolve()
+        files = list(iter_files(folder, pattern))
         if not files:
             raise SystemExit(f"No files matching *.pkl in {folder}")
 
         print(f"Found {len(files)} files matching pattern in {folder}:")
     else:
-        files = [folder_path]
+        files = [path]
 
     print(files)
-    if flatten:
-        rec = rr.RecordingStream(folder_path)
-        rec.set_time("time", duration=0)
-        t = 0
+    rec = rr.RecordingStream(path)
+    rec.set_time("time", duration=0)
+    t = 0
+
     for f in files:
+        motion = Motion.load(f, **kwargs)
         if not flatten:
             rec = rr.RecordingStream(str(f))
             rec.set_time("time", duration=0)
             t = 0
         rec.spawn()
         robot = ReRunRobot(rec, robot_path)
-        t = play_one_file(robot, rec, f, t)
-
-
-def cli():
-    args = tyro.cli(main)
-
-
-if __name__ == "__main__":
-    cli()
+        t = play_one_file(robot, rec, motion, t)

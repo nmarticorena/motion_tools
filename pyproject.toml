@@ -14,4 +14,5 @@ packages = ["motion_tools"]
 "assets" = "assets"
 
 [project.scripts]
-load-pkl = "motion_tools.scripts.load_pkl:cli"
+visualize-pkl = "motion_tools.scripts.visualize_pkl:cli"
+visualize-csv = "motion_tools.scripts.visualize_csv:cli"

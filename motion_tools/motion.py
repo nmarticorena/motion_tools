@@ -32,7 +32,7 @@ class Motion:
         data = np.genfromtxt(
             path,
             delimiter=delimiter,
-            dtype=np.float,
+            dtype=np.float32,
         )
         if data.ndim == 1:
             data = data[None, :]  # single row
@@ -58,3 +58,13 @@ class Motion:
         root_pos = data["root_pos"]
         root_rot = data["root_rot"]
         return cls(dof_pos=dof_pos, fps=fps, root_pos=root_pos, root_rot=root_rot)
+
+    @classmethod
+    def load(cls, path: str | Path, **kwargs) -> "Motion":
+        path = Path(path)
+        suf = path.suffix.lower()
+        if suf == ".csv":
+            return cls.from_csv(path, **kwargs)
+        if suf in (".pkl", ".pickle"):
+            return cls.from_pkl(path)
+        raise ValueError(f"Unsupported format: {suf}")
