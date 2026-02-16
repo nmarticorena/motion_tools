@@ -1,3 +1,8 @@
+context:
+    git_repo_url: "https://github.com/nmarticorena/motion_tools"
+    version: ${{ git.latest_tag( git_repo_url ) }}
+
+
 package:
     name: motion_tools
     version: ${{version}}

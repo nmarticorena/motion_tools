@@ -1,6 +1,7 @@
 name: Package
 
 on:
+    workflow_dispatch:
     push:
         tags:
             - "*"
@@ -17,4 +18,4 @@ jobs:
     - name: Build conda package
       uses: prefix-dev/rattler-build-action@v0.2.34
       with:
-          build-args: --set version=${{ env.VERSION }}
+          build-args: --experimental
