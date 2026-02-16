@@ -22,8 +22,9 @@ jobs:
           build-args: --experimental
     - name: Upload anaconda
       run: |
-          for file in output/**/*.conda; do
-            rattler-build upload anaconda "$file" || true
+          pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
+            echo "Uploading ${pkg}"
+            rattler-build upload anaconda --owner ${{ secrets.ANACONDA_USER }} "$pkg"
           done
       env:
           ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
