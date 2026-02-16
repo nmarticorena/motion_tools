@@ -28,6 +28,6 @@ jobs:
             rattler-build upload anaconda --owner $ANACONDA_OWNER --channel $ANACONDA_CHANNEL "$pkg"
           done
       env:
-          ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
+          ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_TOKEN }}
           ANACONDA_OWNER: ${{ secrets.ANACONDA_USER }}
           ANACONDA_CHANNEL: ${{ secrets.ANACONDA_USER }}
