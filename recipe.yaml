@@ -31,4 +31,5 @@ requirements:
 
 tests:
     - script:
-        - load-pkl --help
+        - visualize-pkl --help
+        - visualize-csv --help
