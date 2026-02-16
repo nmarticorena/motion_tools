@@ -1,0 +1,29 @@
+package:
+    name: motion_tools
+    version: ${{version}}
+
+source:
+    path: .
+
+build:
+    noarch: python
+    script: pip install . -v
+
+
+requirements:
+    host:
+        - python
+        - pip
+        - hatchling
+        - tyro
+        - numpy
+    run:
+        - python
+        - tyro
+        - numpy
+        - rerun-sdk<0.30
+
+
+tests:
+    - script:
+        - load-pkl --help
