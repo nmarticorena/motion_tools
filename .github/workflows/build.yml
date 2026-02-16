@@ -20,3 +20,10 @@ jobs:
       with:
           recipe-path: "recipe.yaml"
           build-args: --experimental
+    - name: Upload anaconda
+      run: |
+          for file in output/**/*.conda; do
+            rattler-build upload anaconda "$file" || true
+          done
+      env:
+          ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_KEY }}
