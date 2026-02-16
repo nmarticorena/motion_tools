@@ -21,7 +21,8 @@ jobs:
       with:
           recipe-path: "recipe.yaml"
           build-args: --experimental
-    - run: |
+    - name: Upload to anaconda
+      run: |
           for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
             echo "Uploading ${pkg}"
             rattler-build upload anaconda --owner $ANACONDA_OWNER --channel $ANACONDA_CHANNEL "$pkg"
