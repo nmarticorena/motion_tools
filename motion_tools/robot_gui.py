@@ -2,9 +2,11 @@ from numpy.typing import ArrayLike
 import numpy as np
 import rerun as rr
 import rerun.blueprint as rrb
+from importlib import resources
 
-class ReRunRobot():
-    def __init__(self,rec:rr.RecordingStream, urdf_path:str, name = ""):
+
+class ReRunRobot:
+    def __init__(self, rec: rr.RecordingStream, urdf_path: str, name=""):
         rec.log_file_from_path(urdf_path)
         self.rec = rec
         self.tree = rr.urdf.UrdfTree.from_file_path(urdf_path, entity_path_prefix=name)
@@ -45,11 +47,17 @@ class ReRunRobot():
             ),
         )
 
+    @classmethod
+    def g1(cls, rec: rr.RecordingStream, name=""):
+        with resources.as_file(
+            resources.files("motion_tools.assets") / "g1_29dof_no_hands.urdf"
+        ) as p:
+            return cls(rec, str(p), name=name)
+
+
 def get_blueprint():
     blueprint = rrb.Spatial3DView(
-        spatial_information=rrb.SpatialInformation(
-            target_frame="world"
-        )
+        spatial_information=rrb.SpatialInformation(target_frame="world")
     )
     return blueprint
 
@@ -59,9 +67,7 @@ if __name__ == "__main__":
 
     rec.spawn()
     blueprint = rrb.Spatial3DView(
-        spatial_information=rrb.SpatialInformation(
-            target_frame="pelvis"
-        )
+        spatial_information=rrb.SpatialInformation(target_frame="pelvis")
     )
     rec.send_blueprint(blueprint)
     robot = ReRunRobot(rec, "assets/g1_29dof_no_hands.urdf")
