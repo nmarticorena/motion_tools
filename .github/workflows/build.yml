@@ -25,7 +25,7 @@ jobs:
       run: |
           for pkg in $(find output -type f \( -name "*.conda" -o -name "*.tar.bz2" \) ); do
             echo "Uploading ${pkg}"
-            rattler-build upload anaconda --owner $ANACONDA_OWNER --channel $ANACONDA_CHANNEL "$pkg"
+            rattler-build upload anaconda --owner $ANACONDA_OWNER "$pkg"
           done
       env:
           ANACONDA_API_KEY: ${{ secrets.ANACONDA_API_TOKEN }}
