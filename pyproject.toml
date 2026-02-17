@@ -10,9 +10,6 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["motion_tools"]
 
-[tool.hatch.build.targets.wheel.force-include]
-"assets" = "assets"
-
 [project.scripts]
 visualize-pkl = "motion_tools.scripts.visualize_pkl:cli"
 visualize-csv = "motion_tools.scripts.visualize_csv:cli"
