@@ -5,7 +5,7 @@ import rerun as rr
 
 import motion_tools
 
-PATH = pathlib.Path(motion_tools.__file__).parent.parent
+PATH = pathlib.Path(motion_tools.__file__).parent
 
 
 def iter_files(folder: pathlib.Path, pattern: str):

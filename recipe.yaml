@@ -20,13 +20,12 @@ requirements:
         - python
         - pip
         - hatchling
-        - tyro
-        - numpy
     run:
         - python
         - tyro
         - numpy
         - rerun-sdk<0.30
+        - urdfpy
 
 
 tests:
