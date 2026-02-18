@@ -94,6 +94,13 @@ class ReRunRobot:
         ) as p:
             return cls(rec, str(p), name=name, target_frame=target_frame)
 
+    @classmethod
+    def right_dfq_hand(cls, rec: rr.RecordingStream, name="", target_frame="world"):
+        with resources.as_file(
+            resources.files("motion_tools.assets") / "DFQ_right_hand.urdf"
+        ) as p:
+            return cls(rec, str(p), name=name, target_frame=target_frame)
+
 
 def get_blueprint(target_frame: str) -> rrb.Blueprint:
     blueprint = rrb.Spatial3DView(
