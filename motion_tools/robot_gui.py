@@ -14,15 +14,18 @@ class ReRunRobot:
         name="",
         target_frame: str = "world",
     ):
-        rec.log_file_from_path(urdf_path)
+        rec.log_file_from_path(urdf_path, entity_path_prefix=name)
         self.rec = rec
         self.urdf_path = urdf_path
-        self.tree = rr.urdf.UrdfTree.from_file_path(urdf_path, entity_path_prefix=name)
+        self.tree = rr.urdf.UrdfTree.from_file_path(
+            urdf_path
+        )  # , entity_path_prefix=name)
         self.rec.send_blueprint(get_blueprint(target_frame))
         self.rec.log("/", rr.CoordinateFrame(target_frame), static=True)
         self.robot = urdfpy.URDF.load(self.urdf_path)
         self.n_revolute_joints = self._get_total_joints()
         self.joint_names = self._get_joint_names()
+        self.name = name
 
     def _get_total_joints(self):
         n_revolute_joints = 0
@@ -37,6 +40,16 @@ class ReRunRobot:
             if joint.joint_type == "revolute" and urdf_joint.mimic is None:
                 joint_names.append(joint.name)
         return joint_names
+
+    def apply_color(self, color: ArrayLike):
+        for joint in self.tree.joints():
+            link = self.tree.get_joint_child(joint)
+            visual_path = self.tree.get_visual_geometry_paths(link)
+            clean_visual_path = [str(v) for v in visual_path]
+            # full_path = [f"{self.name}{v_path}" for v_path in clean_visual_path]
+
+            for v_path in clean_visual_path:
+                self.rec.log(v_path, rr.Asset3D.from_fields(albedo_factor=color))
 
     def log(self, joint_pos):
         pos_dic = {name: pos for name, pos in zip(self.joint_names, joint_pos)}
@@ -80,12 +93,50 @@ class ReRunRobot:
             ),
         )
 
+    @staticmethod
+    def log_transform(
+        rec: rr.RecordingStream,
+        entity_path: str,
+        pos: ArrayLike,
+        quat_xyzw: ArrayLike,
+        *,
+        parent_frame: str,
+        child_frame: str,
+    ) -> None:
+        pos = np.asarray(pos, dtype=float).reshape(3)
+        quat_xyzw = np.asarray(quat_xyzw, dtype=float).reshape(4)
+
+        rec.log(
+            entity_path,
+            rr.Transform3D(
+                translation=pos,
+                rotation=rr.Quaternion(xyzw=quat_xyzw),
+                parent_frame=parent_frame,
+                child_frame=child_frame,
+            ),
+        )
+
     @classmethod
     def g1(cls, rec: rr.RecordingStream, name="", target_frame="world"):
         with resources.as_file(
             resources.files("motion_tools.assets") / "g1_29dof_no_hands.urdf"
         ) as p:
-            return cls(rec, str(p), name=name)
+            return cls(rec, str(p), name=name, target_frame=target_frame)
+
+    @classmethod
+    def g1_debug(cls, rec: rr.RecordingStream, name="", target_frame="world"):
+        cls.log_transform(
+            rec,
+            "transforms",
+            [0, 0, 0],
+            [0, 0, 0, 1],
+            parent_frame=target_frame,
+            child_frame="debug_pelvis",
+        )
+        with resources.as_file(
+            resources.files("motion_tools.assets") / "g1_29dof_no_hands_debug.urdf"
+        ) as p:
+            return cls(rec, str(p), name=name, target_frame=target_frame)
 
     @classmethod
     def left_dfq_hand(cls, rec: rr.RecordingStream, name="", target_frame="world"):
