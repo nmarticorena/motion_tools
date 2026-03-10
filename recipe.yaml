@@ -27,6 +27,7 @@ requirements:
         - numpy
         - rerun-sdk<0.30
         - urdfpy
+        - pinocchio
 
 
 tests:
