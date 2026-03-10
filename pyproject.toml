@@ -1,14 +1,26 @@
 [project]
 name = "motion_tools"
-version = "0.1.1"
+dynamic = ["version"]
 description = "Scripts for humanoid motion retargetting"
+requires-python = ">=3.11.0,<3.15"
+dependencies = [
+    "rerun-sdk>=0.29.1,<0.30",
+    "numpy>=2.0.0,<3",
+    "tyro>=1.0.6,<2",
+    "hatchling>=1.28.0,<2",
+    "scipy>=1.17.0,<2",
+    "urdfpy>=0.0.22,<0.0.23"
+]
 
 [build-system] # this is to fix issue with pixi pip install on editable mode
-requires = ["hatchling"]
+requires = ["hatchling","hatch-vcs"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["motion_tools"]
+
+[tool.hatch.version]
+source = "vcs"
 
 [project.scripts]
 visualize-pkl = "motion_tools.scripts.visualize_pkl:cli"
