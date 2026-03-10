@@ -1,4 +1,5 @@
 from numpy.typing import ArrayLike
+import pinocchio as pin
 import numpy as np
 import rerun as rr
 import rerun.blueprint as rrb
@@ -21,7 +22,7 @@ class ReRunRobot:
             urdf_path
         )  # , entity_path_prefix=name)
         self.rec.send_blueprint(get_blueprint(target_frame))
-        self.rec.log("/", rr.CoordinateFrame(target_frame), static=True)
+        # self.rec.log("/", rr.CoordinateFrame(target_frame), static=True)
         self.robot = urdfpy.URDF.load(self.urdf_path)
         self.n_revolute_joints = self._get_total_joints()
         self.joint_names = self._get_joint_names()
@@ -73,7 +74,6 @@ class ReRunRobot:
         entity_path: str,
         pos: ArrayLike,
         quat_xyzw: ArrayLike,
-        *,
         parent_frame: str,
         child_frame: str,
     ) -> None:
@@ -93,13 +93,19 @@ class ReRunRobot:
             ),
         )
 
+    def log_pin_transform(self, name: str, pose: pin.SE3):
+        pos = pose.translation
+        quat_xyzw = pin.Quaternion(pose.rotation).coeffs()
+        self.log_transform(
+            self.rec, name, pos, quat_xyzw, parent_frame="pelvis", child_frame=name
+        )
+
     @staticmethod
     def log_transform(
         rec: rr.RecordingStream,
         entity_path: str,
         pos: ArrayLike,
         quat_xyzw: ArrayLike,
-        *,
         parent_frame: str,
         child_frame: str,
     ) -> None:
@@ -114,6 +120,7 @@ class ReRunRobot:
                 parent_frame=parent_frame,
                 child_frame=child_frame,
             ),
+            rr.TransformAxes3D(axis_length=0.1),
         )
 
     @classmethod
@@ -154,8 +161,14 @@ class ReRunRobot:
 
 
 def get_blueprint(target_frame: str) -> rrb.Blueprint:
-    blueprint = rrb.Spatial3DView(
-        spatial_information=rrb.SpatialInformation(target_frame=target_frame)
+    blueprint = rrb.Blueprint(
+        rrb.Horizontal(
+            rrb.Spatial3DView(
+                spatial_information=rrb.SpatialInformation(target_frame=target_frame),
+                contents=["-/cameras/**", "/**"],
+            ),
+            rrb.Spatial2DView(contents="cameras/**"),
+        )
     )
     return blueprint
 
