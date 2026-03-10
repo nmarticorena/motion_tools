@@ -20,6 +20,7 @@ requirements:
         - python
         - pip
         - hatchling
+        - hatch-vcs
     run:
         - python
         - tyro
