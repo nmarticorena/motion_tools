@@ -5,6 +5,8 @@ import rerun as rr
 import rerun.blueprint as rrb
 from importlib import resources
 import urdfpy
+import spatialmath as sm
+import spatialmath.base as smb
 
 
 class ReRunRobot:
@@ -18,11 +20,8 @@ class ReRunRobot:
         rec.log_file_from_path(urdf_path, entity_path_prefix=name)
         self.rec = rec
         self.urdf_path = urdf_path
-        self.tree = rr.urdf.UrdfTree.from_file_path(
-            urdf_path
-        )  # , entity_path_prefix=name)
+        self.tree = rr.urdf.UrdfTree.from_file_path(urdf_path)
         self.rec.send_blueprint(get_blueprint(target_frame))
-        # self.rec.log("/", rr.CoordinateFrame(target_frame), static=True)
         self.robot = urdfpy.URDF.load(self.urdf_path)
         self.n_revolute_joints = self._get_total_joints()
         self.joint_names = self._get_joint_names()
@@ -46,10 +45,7 @@ class ReRunRobot:
         for joint in self.tree.joints():
             link = self.tree.get_joint_child(joint)
             visual_path = self.tree.get_visual_geometry_paths(link)
-            clean_visual_path = [str(v) for v in visual_path]
-            # full_path = [f"{self.name}{v_path}" for v_path in clean_visual_path]
-
-            for v_path in clean_visual_path:
+            for v_path in visual_path:
                 self.rec.log(v_path, rr.Asset3D.from_fields(albedo_factor=color))
 
     def log(self, joint_pos):
@@ -96,6 +92,13 @@ class ReRunRobot:
     def log_pin_transform(self, name: str, pose: pin.SE3):
         pos = pose.translation
         quat_xyzw = pin.Quaternion(pose.rotation).coeffs()
+        self.log_transform(
+            self.rec, name, pos, quat_xyzw, parent_frame="pelvis", child_frame=name
+        )
+
+    def log_se3_transform(self, name: str, pose: sm.SE3):
+        pos = pose.t
+        quat_xyzw = smb.r2q(pose.R, order="xyzs")
         self.log_transform(
             self.rec, name, pos, quat_xyzw, parent_frame="pelvis", child_frame=name
         )
@@ -162,13 +165,25 @@ class ReRunRobot:
 
 def get_blueprint(target_frame: str) -> rrb.Blueprint:
     blueprint = rrb.Blueprint(
-        rrb.Horizontal(
-            rrb.Spatial3DView(
-                spatial_information=rrb.SpatialInformation(target_frame=target_frame),
-                contents=["-/cameras/**", "/**"],
+        rrb.Vertical(
+            rrb.Horizontal(
+                rrb.Spatial3DView(
+                    spatial_information=rrb.SpatialInformation(
+                        target_frame=target_frame
+                    ),
+                    contents=["-/cameras/**", "-/plots/**", "/**"],
+                ),
+                rrb.Spatial2DView(contents="cameras/**"),
             ),
-            rrb.Spatial2DView(contents="cameras/**"),
-        )
+            rrb.TimeSeriesView(
+                contents="plots/**", axis_y=rrb.ScalarAxis(range=(0, 1))
+            ),
+            # rrb.Horizontal(
+            # rrb.(contents="plots/**"),
+            # rrb.DataTableView(contents="data_table/**"),
+            # ),
+        ),
+        collapse_panels=True,
     )
     return blueprint
 
