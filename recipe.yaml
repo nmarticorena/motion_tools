@@ -28,6 +28,7 @@ requirements:
         - rerun-sdk<0.30
         - urdfpy
         - pinocchio
+        - spatialmath-python
 
 
 tests:

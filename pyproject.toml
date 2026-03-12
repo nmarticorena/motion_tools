@@ -9,7 +9,8 @@ dependencies = [
     "tyro>=1.0.6,<2",
     "hatchling>=1.28.0,<2",
     "scipy>=1.17.0,<2",
-    "urdfpy>=0.0.22,<0.0.23"
+    "urdfpy>=0.0.22,<0.0.23",
+    "spatialmath-python",
 ]
 
 [build-system] # this is to fix issue with pixi pip install on editable mode
