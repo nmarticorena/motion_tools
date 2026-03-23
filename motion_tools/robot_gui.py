@@ -146,7 +146,10 @@ class ReRunRobot:
         with resources.as_file(
             resources.files("motion_tools.assets") / "g1_29dof_no_hands_debug.urdf"
         ) as p:
-            return cls(rec, str(p), name=name, target_frame=target_frame)
+            robot = cls(rec, str(p), name=name, target_frame=target_frame)
+
+        robot.apply_color([1.0, 0.0, 0.0])
+        return robot
 
     @classmethod
     def left_dfq_hand(cls, rec: rr.RecordingStream, name="", target_frame="world"):
@@ -175,13 +178,13 @@ def get_blueprint(target_frame: str) -> rrb.Blueprint:
                 ),
                 rrb.Spatial2DView(contents="cameras/**"),
             ),
-            rrb.TimeSeriesView(
-                contents="plots/**", axis_y=rrb.ScalarAxis(range=(0, 1))
+            rrb.Horizontal(
+                rrb.TimeSeriesView(
+                    contents="state/**"  # , axis_y=rrb.ScalarAxis(range=(0, 1))
+                ),
+                rrb.TimeSeriesView(contents="costs/**"),
+                rrb.TimeSeriesView(contents="costs_norm/**"),
             ),
-            # rrb.Horizontal(
-            # rrb.(contents="plots/**"),
-            # rrb.DataTableView(contents="data_table/**"),
-            # ),
         ),
         collapse_panels=True,
     )
