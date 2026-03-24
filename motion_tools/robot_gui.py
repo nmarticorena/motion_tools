@@ -45,7 +45,8 @@ class ReRunRobot:
         for joint in self.tree.joints():
             link = self.tree.get_joint_child(joint)
             visual_path = self.tree.get_visual_geometry_paths(link)
-            for v_path in visual_path:
+            clean_visual_path = [self.name + "/" + str(v) for v in visual_path]
+            for v_path in clean_visual_path:
                 self.rec.log(v_path, rr.Asset3D.from_fields(albedo_factor=color))
 
     def log(self, joint_pos):
@@ -89,11 +90,11 @@ class ReRunRobot:
             ),
         )
 
-    def log_pin_transform(self, name: str, pose: pin.SE3):
+    def log_pin_transform(self, name: str, pose: pin.SE3, parent_frame="pelvis"):
         pos = pose.translation
         quat_xyzw = pin.Quaternion(pose.rotation).coeffs()
         self.log_transform(
-            self.rec, name, pos, quat_xyzw, parent_frame="pelvis", child_frame=name
+            self.rec, name, pos, quat_xyzw, parent_frame=parent_frame, child_frame=name
         )
 
     def log_se3_transform(self, name: str, pose: sm.SE3):
@@ -148,7 +149,7 @@ class ReRunRobot:
         ) as p:
             robot = cls(rec, str(p), name=name, target_frame=target_frame)
 
-        robot.apply_color([1.0, 0.0, 0.0])
+        robot.apply_color([1.0, 0.0, 0.0, 0.5])
         return robot
 
     @classmethod
