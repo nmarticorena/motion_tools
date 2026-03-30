@@ -7,6 +7,12 @@ from importlib import resources
 import urdfpy
 import spatialmath as sm
 import spatialmath.base as smb
+import warnings
+
+
+warnings.filterwarnings(
+    "ignore", message=".*angle.*outside limits.*", category=UserWarning
+)
 
 
 class ReRunRobot:
@@ -25,6 +31,8 @@ class ReRunRobot:
         self.robot = urdfpy.URDF.load(self.urdf_path)
         self.n_revolute_joints = self._get_total_joints()
         self.joint_names = self._get_joint_names()
+        self.resolution_order = self._build_resolution_order()
+        self.limits = self._build_limits()
         self.name = name
 
     def _get_total_joints(self):
@@ -41,6 +49,38 @@ class ReRunRobot:
                 joint_names.append(joint.name)
         return joint_names
 
+    def _build_resolution_order(self):
+        """Returns joint names in dependency order (actuated first, then mimics)."""
+        mimic_map = {j.name: j.mimic for j in self.robot.joints if j.mimic is not None}
+        resolved = list(self.joint_names)  # actuated joints are already resolved
+        resolved_set = set(resolved)
+        order = []  # list of (joint_name, mimic_or_None)
+
+        for name in resolved:
+            order.append((name, None))
+
+        unresolved = [(name, mimic_map[name]) for name in mimic_map]
+        for _ in range(len(unresolved) + 1):
+            next_unresolved = []
+            for name, mimic in unresolved:
+                if mimic.joint in resolved_set:
+                    order.append((name, mimic))
+                    resolved_set.add(name)
+                else:
+                    next_unresolved.append((name, mimic))
+            unresolved = next_unresolved
+            if not unresolved:
+                break
+
+        return order
+
+    def _build_limits(self):
+        limits = {}
+        for joint, urdf_joint in zip(self.tree.joints(), self.robot.joints):
+            if joint.joint_type == "revolute":
+                limits[joint.name] = urdf_joint.limit
+        return limits
+
     def apply_color(self, color: ArrayLike):
         for joint in self.tree.joints():
             link = self.tree.get_joint_child(joint)
@@ -50,19 +90,34 @@ class ReRunRobot:
                 self.rec.log(v_path, rr.Asset3D.from_fields(albedo_factor=color))
 
     def log(self, joint_pos):
+        """Log from a positional array (existing behaviour)."""
         pos_dic = {name: pos for name, pos in zip(self.joint_names, joint_pos)}
-        revolute_joints_idx = 0
+        self._log_from_dict(pos_dic)
+
+    def log_from_dict(self, joint_pos: dict[str, float]):
+        """Log from a {urdf_joint_name: position} dict (e.g. from hand_state_to_urdf_map)."""
+        # Only keep keys that are actuated joints this robot knows about
+        pos_dic = {
+            name: joint_pos[name] for name in self.joint_names if name in joint_pos
+        }
+        self._log_from_dict(pos_dic)
+
+    def _log_from_dict(self, pos_dic: dict[str, float]):
+        """Shared implementation: resolve mimics then log transforms."""
+        for joint_name, mimic in self.resolution_order:
+            if mimic is not None:
+                pos_dic[joint_name] = (
+                    mimic.multiplier * pos_dic[mimic.joint] + mimic.offset
+                )
+                pos_dic[joint_name] = np.clip(
+                    pos_dic[joint_name],
+                    self.limits[joint_name].lower,
+                    self.limits[joint_name].upper,
+                )
+
         for joint, urdf_joint in zip(self.tree.joints(), self.robot.joints):
-            assert joint.name == urdf_joint.name
             if joint.joint_type == "revolute":
-                if joint.name in self.robot.actuated_joint_names:
-                    angle = pos_dic[joint.name]
-                else:
-                    angle = (
-                        urdf_joint.mimic.multiplier * pos_dic[urdf_joint.mimic.joint]
-                        + urdf_joint.mimic.offset
-                    )
-                revolute_joints_idx += 1
+                angle = pos_dic[joint.name]
                 transform = joint.compute_transform(angle)
                 self.rec.log("transforms", transform)
 
@@ -75,7 +130,7 @@ class ReRunRobot:
         child_frame: str,
     ) -> None:
         """
-        Logs a transform with explicit named frames (like ROS TF, but you can log it anywhere).
+        Logs a transform with explicit named frames like ros TF.
         """
         pos = np.asarray(pos, dtype=float).reshape(3)
         quat_xyzw = np.asarray(quat_xyzw, dtype=float).reshape(4)
