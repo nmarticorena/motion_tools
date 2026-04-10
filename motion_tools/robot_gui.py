@@ -184,6 +184,30 @@ class ReRunRobot:
             rr.TransformAxes3D(axis_length=0.1),
         )
 
+    @staticmethod
+    def _resolve_package_uris_in_urdf(
+        urdf_path: str, package_roots: dict[str, str]
+    ) -> str:
+        original_urdf_text = Path(urdf_path).read_text()
+        urdf_text = original_urdf_text
+
+        for package_name, package_root in package_roots.items():
+            package_prefix = f"package://{package_name}/"
+            resolved_prefix = Path(package_root).resolve().as_posix() + "/"
+            urdf_text = urdf_text.replace(package_prefix, resolved_prefix)
+
+        if urdf_text == original_urdf_text:
+            return urdf_path
+
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".urdf",
+            prefix=f"{Path(urdf_path).stem}_resolved_",
+            delete=False,
+        ) as resolved_urdf:
+            resolved_urdf.write(urdf_text)
+            return resolved_urdf.name
+
     @classmethod
     def g1(cls, rec: rr.RecordingStream, name="", target_frame="world"):
         with resources.as_file(
