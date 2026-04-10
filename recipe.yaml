@@ -26,7 +26,7 @@ requirements:
         - tyro
         - numpy
         - rerun-sdk<0.30
-        - urdfpy
+        - urchin
         - pinocchio
         - spatialmath-python
 
