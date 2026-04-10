@@ -234,6 +234,25 @@ class ReRunRobot:
             resources.files("motion_tools.assets") / "FTP_right_hand.urdf"
         ) as p:
             return cls(rec, str(p), name=name, target_frame=target_frame)
+    
+    @classmethod
+    def panda(cls, rec: rr.RecordingStream, name="", target_frame="world"):
+        try:
+            from robot_descriptions.panda_description import (
+                REPOSITORY_PATH,
+                URDF_PATH,
+            )
+        except ImportError as exc:
+            raise ImportError(
+                "ReRunRobot.panda requires the `robot_descriptions` package "
+                "with `robot_descriptions.panda_description` available."
+            ) from exc
+
+        resolved_urdf_path = cls._resolve_package_uris_in_urdf(
+            str(URDF_PATH),
+            {"example-robot-data": str(REPOSITORY_PATH)},
+        )
+        return cls(rec, resolved_urdf_path, name=name, target_frame=target_frame)
 
 
 def get_blueprint(target_frame: str) -> rrb.Blueprint:
