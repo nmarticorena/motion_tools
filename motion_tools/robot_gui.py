@@ -4,7 +4,9 @@ import numpy as np
 import rerun as rr
 import rerun.blueprint as rrb
 from importlib import resources
-import urdfpy
+from pathlib import Path
+import tempfile
+import urchin as urdfpy
 import spatialmath as sm
 import spatialmath.base as smb
 import warnings
