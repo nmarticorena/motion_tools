@@ -78,5 +78,5 @@ def play_folder(
             rec.set_time("time", duration=0)
             t = 0
         rec.spawn()
-        robot = ReRunRobot(rec, robot_path)
+        robot = ReRunRobot(robot_path)
         t = play_one_file(robot, rec, motion, t)
