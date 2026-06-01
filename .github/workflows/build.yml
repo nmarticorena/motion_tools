@@ -15,7 +15,7 @@ jobs:
     - name: Extract version from tag
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
     - name: Build conda package
-      uses: prefix-dev/rattler-build-action@v0.2.34
+      uses: prefix-dev/rattler-build-action@v0.2.38
       with:
           recipe-path: "recipe.yaml"
           build-args: --experimental
