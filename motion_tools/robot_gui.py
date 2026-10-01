@@ -59,12 +59,39 @@ class ReRunRobot:
         self.resolution_order = self._build_resolution_order()
         self.limits = self._build_limits()
 
-    def add_copy(self, name: str, target_frame: str | None = None) -> "ReRunRobot":
-        return type(self)(
+    def add_copy(
+        self,
+        name: str,
+        target_frame: str | None = None,
+        color: ArrayLike = (1.0, 0.0, 0.0, 0.5),
+    ) -> "ReRunRobot":
+        target_frame = self.target_frame if target_frame is None else target_frame
+
+        # First add "debug_" to every link/joint in the source URDF.
+        debug_urdf_path, _, _ = self._namespace_urdf(
             self.source_urdf_path,
-            name=name,
-            target_frame=self.target_frame if target_frame is None else target_frame,
+            "debug",
         )
+
+        # Then `name` provides the normal namespace:
+        # pelvis -> debug_pelvis -> <name>_debug_pelvis
+        new_robot = type(self)(
+            debug_urdf_path,
+            name=name,
+            target_frame=target_frame,
+        )
+
+        self.log_transform(
+            "transforms",
+            [0, 0, 0],
+            [0, 0, 0, 1],
+            parent_frame=target_frame,
+            child_frame=new_robot._resolve_link_name("debug_pelvis"),
+        )
+
+        new_robot.apply_color(color)
+
+        return new_robot
 
     @staticmethod
     def _namespace_token(prefix: str, name: str) -> str:
@@ -369,7 +396,7 @@ class ReRunRobot:
             resources.files("motion_tools.assets") / "FTP_right_hand.urdf"
         ) as p:
             return cls(str(p), name=name, target_frame=target_frame)
-    
+
     @classmethod
     def panda(cls, name="", target_frame="world"):
         try:
